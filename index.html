@@ -22,7 +22,7 @@
 <link rel="stylesheet" href="fonts/pretendard.css?v=3a4dd8f1">
 <link rel="stylesheet" href="css/lite.css?v=4855c5ce">
 <link rel="stylesheet" href="css/workshop.css?v=f257ed86">
-<script src="js/workshop.js?v=0bc1f848" defer></script>
+<script src="js/workshop.js?v=45a31fc3" defer></script>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -105,7 +105,7 @@
         <p class="c-q-n">기장료 계산 1 / 3</p>
         <h2 id="c-title" class="c-q">어떤 일을 하세요?</h2>
         <div class="c-opts grid" data-name="ind">
-          <button type="button" data-v="food" data-g="B">음식점 · 카페</button>
+          <button type="button" data-v="food" data-g="B">음식점 · 카페 · 숙박</button>
           <button type="button" data-v="retail" data-g="A">도소매 · 온라인 판매</button>
           <button type="button" data-v="personal" data-g="C">미용 · 네일 · 세탁</button>
           <button type="button" data-v="edu" data-g="C">학원 · 교습소</button>
@@ -122,13 +122,12 @@
       <section class="c-step" data-step="rev" hidden>
         <p class="c-q-n">기장료 계산 2 / 3</p>
         <h2 class="c-q">작년 매출은 어느 정도예요?</h2>
-        <p class="c-help">대략이면 괜찮아요. 홈택스 ‘매출 조회’에서도 볼 수 있어요.</p>
+        <p class="c-help">업종마다 기준이 달라요. 대략이면 괜찮아요(홈택스 ‘매출 조회’에서도 볼 수 있어요).</p>
         <div class="c-opts list" data-name="rev">
           <button type="button" data-v="new">올해 시작했어요<small>사업 준비 중 포함</small></button>
-          <button type="button" data-v="r1">3억원 미만</button>
-          <button type="button" data-v="r2">3억원 ~ 5억원</button>
-          <button type="button" data-v="r3">5억원 ~ 9억원</button>
-          <button type="button" data-v="r4">9억원 이상</button>
+          <button type="button" data-v="lo">3억원 이하</button>
+          <button type="button" data-v="mid">3억원 초과 ~ 5억원 미만</button>
+          <button type="button" data-v="hi">5억원 이상</button>
           <button type="button" data-v="unk">잘 모르겠어요</button>
         </div>
       </section>

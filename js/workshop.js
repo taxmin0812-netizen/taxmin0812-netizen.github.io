@@ -874,39 +874,44 @@
     [].slice.call(grp.children).forEach(function (x) { x.classList.toggle('on', x === b); });
     A[name] = b;
     setTimeout(function () {
-      if (name === 'ind') { if (b.getAttribute('data-v') === 'corp') { compute(); go('result'); hit('result', true); } else go('rev'); }
+      if (name === 'ind') { if (b.getAttribute('data-v') === 'corp') { compute(); go('result'); hit('result', true); } else { revBands(b.getAttribute('data-g')); go('rev'); } }
       else if (name === 'rev') go('emp');
       else { go('wait'); setTimeout(function () { compute(); show('result'); hit('result', true); }, calm ? 0 : 1100); }
     }, calm ? 0 : 220);
   });
 
 
-  /* 택스민 요금 등급표(10/29, 개인사업자 · 직전 연도 매출(수입금액) 기준)
-     업종군: 가 = 도소매(A) · 나 = 음식·제조·건설·운수·정보통신(B) · 다 = 서비스·임대·교육·전문직(C·P·?)
-     Lite 월 5~6만원(복식부기 장부 포함, 4대보험 직원 3명까지 5만 · 4~5명 6만) | Plus 월 7~8만원 | 성실 월 12~15만원(성실신고확인 대상)
-     Lite 상한 가 9억 · 나 5억 · 다 3억 / 성실 가 15억 · 나 7.5억 · 다 5억. 부가세·조정료 별도, 6개월 약정. Plus·성실 직원 수 기준은 미정.
-     매출 보기: new 올해 시작 · r1 3억 미만 · r2 3억~5억 · r3 5억~9억 · r4 9억 이상 · unk */
-  var TIER = { A: { r1: 'L', r2: 'L', r3: 'L', r4: 'P+' }, B: { r1: 'L', r2: 'P', r3: 'P/S', r4: 'S' }, C: { r1: 'L', r2: 'P', r3: 'S', r4: 'S' } };
-  var SINL = { A: '15억원', B: '7억 5천만원', C: '5억원' };
+  /* 택스민 요금 등급표(10/29, 개인사업자 · 직전 연도 매출 기준) — 11/2 설문을 등급표에 맞춰 다시 짬
+     업종군: 가 = 도소매(A) · 나 = 음식·제조·건설·운수·정보통신(B) · 다 = 서비스·임대·교육·전문직·그 밖(C·P·?)
+     Lite 월 5~6만원(직원 3명까지 5만 · 4~5명 6만) | Plus 월 7~8만원 | 성실 월 12~15만원
+     Lite 상한 가 9억 · 나 5억 · 다 3억 / 성실 가 15억 · 나 7.5억 · 다 5억 이상. 부가세·조정료 별도, 6개월 약정. Plus·성실 직원 수 기준은 미정.
+     매출 질문은 고른 업종의 기준으로 칸이 바뀜: new 올해 시작 · lo Lite 상한 이하 → Lite · mid 그 사이 → Plus · hi 성실 기준 이상 → 성실 · unk */
+  var BAND = {
+    A: { lo: '9억원', hi: '15억원', loM: '7,500만원', hiM: '1억 2,500만원' },
+    B: { lo: '5억원', hi: '7억 5천만원', loM: '약 4,200만원', hiM: '약 6,300만원' },
+    C: { lo: '3억원', hi: '5억원', loM: '2,500만원', hiM: '약 4,200만원' }
+  };
+  function band(g) { return BAND[g === 'A' || g === 'B' ? g : 'C']; }
+  function revBands(g) {
+    var b = band(g), box = doc.querySelector('.c-opts[data-name="rev"]');
+    var L = { lo: b.lo + ' 이하<small>한 달 평균 ' + b.loM + ' 이하</small>',
+              mid: b.lo + ' 초과 ~ ' + b.hi + ' 미만<small>한 달 평균 ' + b.loM + ' ~ ' + b.hiM + '</small>',
+              hi: b.hi + ' 이상<small>한 달 평균 ' + b.hiM + ' 이상</small>' };
+    [].slice.call(box.children).forEach(function (x) { x.classList.remove('on'); var v = x.getAttribute('data-v'); if (L[v]) x.innerHTML = L[v]; });
+    A.rev = null;
+  }
   function compute() {
     var ind = A.ind, g = ind.getAttribute('data-g');
     var rv = A.rev ? A.rev.getAttribute('data-v') : '', emp = A.emp ? +A.emp.getAttribute('data-v') : 0;
     R = { ind: ind.textContent, rev: A.rev ? A.rev.firstChild.textContent : '-', emp: A.emp ? A.emp.textContent : '-', plan: '', price: '', why: '', sub: '', kind: '' };
     if (g === 'X') { R.rev = '-'; R.emp = '-'; R.kind = 'corp'; R.plan = '<b>법인 기장</b>'; R.price = '월 12만원부터'; R.firm = 1; R.why = '택스민 등급표는 개인사업자 기준이에요. 법인은 상담 때 따로 안내해 드려요.'; return; }
-    var gg = g === 'A' || g === 'B' ? g : 'C';
-    var t = rv === 'new' ? 'L' : rv === 'unk' ? 'U' : (TIER[gg][rv] || 'U');
-    if (g === '?' && t !== 'L' && t !== 'U') t = 'U2';
-    if ((t === 'L') && emp > 5) { t = 'P'; R.why = 'Lite는 직원 5명까지예요. 6명부터는 Plus예요.'; }
-    if (t === 'L') { R.kind = 'lite'; R.plan = '택스민 <b>Lite</b>'; R.price = emp > 3 ? '월 6만원' : '월 5만원'; R.staff = emp; if (emp <= 3) R.sub = '직원이 4~5명이면 월 6만원이에요.'; return; }
-    if (t === 'U' || t === 'U2') {
-      R.kind = 'unk'; R.plan = '택스민 <b>Lite</b> 또는 <b>Plus</b>'; R.price = '월 5~8만원';
-      R.why = t === 'U' ? '작년 매출에 따라 등급이 정해져요. 상담 때 홈택스 자료로 함께 확인해 드릴게요.' : '업종에 따라 기준이 달라요. 상담 때 함께 확인해 드릴게요.';
-      return;
-    }
-    if (t === 'S') { R.kind = 'sin'; R.plan = '택스민 <b>성실</b>'; R.price = '월 12~15만원'; R.why = '작년 매출이 ' + SINL[gg] + '을 넘는 가게는 신고 때 세무사가 한 번 더 꼼꼼히 확인해요.'; return; }
-    R.kind = 'plus'; R.plan = '택스민 <b>Plus</b>'; R.price = '월 7~8만원';
-    if (t === 'P+') R.sub = '작년 매출이 15억원을 넘으면 월 12~15만원이에요.';
-    if (t === 'P/S') R.sub = '작년 매출이 7억 5천만원을 넘으면 월 12~15만원이에요.';
+    var b = band(g), t = rv === 'new' || rv === 'lo' ? 'L' : rv === 'mid' ? 'P' : rv === 'hi' ? 'S' : 'U';
+    if (t === 'L' && emp > 5) { t = 'P'; R.why = 'Lite는 직원 5명까지예요. 6명부터는 Plus예요.'; }
+    if (t === 'L') { R.kind = 'lite'; R.plan = '택스민 <b>Lite</b>'; R.price = emp > 3 ? '월 6만원' : '월 5만원'; R.staff = emp; if (emp <= 3) R.sub = '직원이 4~5명이면 월 6만원이에요.'; }
+    else if (t === 'U') { R.kind = 'unk'; R.plan = '택스민 <b>Lite</b> · <b>Plus</b> · <b>성실</b> 중 하나'; R.price = '월 5만원부터'; R.why = '작년 매출에 따라 등급이 정해져요. 상담 때 홈택스 자료로 함께 확인해 드릴게요.'; }
+    else if (t === 'S') { R.kind = 'sin'; R.plan = '택스민 <b>성실</b>'; R.price = '월 12~15만원'; R.why = '작년 매출이 ' + b.hi + ' 이상인 가게는 신고 때 세무사가 한 번 더 꼼꼼히 확인해요.'; }
+    else { R.kind = 'plus'; R.plan = '택스민 <b>Plus</b>'; R.price = '월 7~8만원'; if (!R.why) R.why = '작년 매출이 ' + b.lo + '을 넘으면 Plus 등급이에요.'; R.sub = '작년 매출이 ' + b.hi + ' 이상이 되면 성실 등급(월 12~15만원)이에요.'; }
+    if (g === '?' && t !== 'L') R.why = (R.why ? R.why + ' ' : '') + '그 밖의 업종은 기준이 다를 수 있어 상담 때 확정해요.';
   }
   function renderResult() {
     var h = '', CK = '<svg aria-hidden="true"><use href="#i-chk"/></svg>';
