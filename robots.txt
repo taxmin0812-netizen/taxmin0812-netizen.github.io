@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://taxmin0812-netizen.github.io/sitemap.xml
